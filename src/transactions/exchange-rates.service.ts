@@ -24,7 +24,6 @@ export class ExchangeRatesService {
         .pipe(
           map(({ data }) => data.quotes[`${baseCurrency}${currencies[0]}`]),
           catchError((error: AxiosError) => {
-            console.log(error.response.config.baseURL);
             throw new InternalServerErrorException(error.message);
           }),
         ),
