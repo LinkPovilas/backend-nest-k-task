@@ -3,7 +3,6 @@ import { CalculateCommissionDto } from './dto/calculate-commission.dto';
 import { ClientDiscountHandler } from './handlers/commission/client-discount.handler';
 import { DefaultPriceHandler } from './handlers/commission/default-price.handler';
 import { HighTurnoverDiscountHandler } from './handlers/commission/high-turnover-discount.handler';
-import { plainToClass } from 'class-transformer';
 import { ClientsService } from '../clients/clients.service';
 import { CommissionDto } from './dto/commission.dto';
 
@@ -17,12 +16,10 @@ export class CommissionsService {
   ) {}
 
   async calculate(calculateCommissionDto: CalculateCommissionDto) {
-    const request = plainToClass(
-      CalculateCommissionDto,
-      calculateCommissionDto,
+    const client = await this.clientService.findOne(
+      calculateCommissionDto.clientId,
     );
 
-    const client = await this.clientService.findOne(request.clientId);
     if (!client) {
       throw new BadRequestException('Client not found');
     }
@@ -30,7 +27,10 @@ export class CommissionsService {
     this.defaultPriceHandler.setNextHandler(this.highTurnoverDiscountHandler);
     this.highTurnoverDiscountHandler.setNextHandler(this.clientDiscountHandler);
 
-    const amount = await this.defaultPriceHandler.handle(request);
+    const amount = await this.defaultPriceHandler.handle(
+      calculateCommissionDto,
+    );
+
     return new CommissionDto({ amount });
   }
 }
